@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.jdbc.support;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -356,8 +355,7 @@ public abstract class JdbcUtils {
 		return (T) extractDatabaseMetaData(dataSource,
 				dbmd -> {
 					try {
-						Method method = DatabaseMetaData.class.getMethod(metaDataMethodName, (Class[]) null);
-						return method.invoke(dbmd, (Object[]) null);
+						return DatabaseMetaData.class.getMethod(metaDataMethodName).invoke(dbmd);
 					}
 					catch (NoSuchMethodException ex) {
 						throw new MetaDataAccessException("No method named '" + metaDataMethodName +
@@ -408,9 +406,10 @@ public abstract class JdbcUtils {
 	}
 
 	/**
-	 * Extract a common name for the database in use even if various drivers/platforms provide varying names.
+	 * Extract a common name for the target database in use even if
+	 * various drivers/platforms provide varying names at runtime.
 	 * @param source the name as provided in database metadata
-	 * @return the common name to be used
+	 * @return the common name to be used (e.g. "DB2" or "Sybase")
 	 */
 	@Nullable
 	public static String commonDatabaseName(@Nullable String source) {
@@ -433,10 +432,10 @@ public abstract class JdbcUtils {
 	 * @return whether the type is numeric
 	 */
 	public static boolean isNumeric(int sqlType) {
-		return Types.BIT == sqlType || Types.BIGINT == sqlType || Types.DECIMAL == sqlType ||
+		return (Types.BIT == sqlType || Types.BIGINT == sqlType || Types.DECIMAL == sqlType ||
 				Types.DOUBLE == sqlType || Types.FLOAT == sqlType || Types.INTEGER == sqlType ||
 				Types.NUMERIC == sqlType || Types.REAL == sqlType || Types.SMALLINT == sqlType ||
-				Types.TINYINT == sqlType;
+				Types.TINYINT == sqlType);
 	}
 
 	/**

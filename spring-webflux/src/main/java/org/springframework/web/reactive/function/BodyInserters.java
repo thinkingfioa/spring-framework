@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -250,9 +250,9 @@ public abstract class BodyInserters {
 	 * @return a {@code BodyInserter} that writes multipart data
 	 * @see MultipartBodyBuilder
 	 */
-	public static MultipartInserter fromMultipartData(MultiValueMap<String, Object> multipartData) {
+	public static MultipartInserter fromMultipartData(MultiValueMap<String, ?> multipartData) {
 		Assert.notNull(multipartData, "'multipartData' must not be null");
-		return new DefaultMultipartInserter().with(multipartData);
+		return new DefaultMultipartInserter().withInternal(multipartData);
 	}
 
 	/**
@@ -477,9 +477,16 @@ public abstract class BodyInserters {
 
 		@Override
 		public MultipartInserter with(MultiValueMap<String, Object> values) {
+			return withInternal(values);
+		}
+
+		@SuppressWarnings("unchecked")
+		private MultipartInserter withInternal(MultiValueMap<String, ?> values) {
 			Assert.notNull(values, "'values' must not be null");
-			for (Map.Entry<String, List<Object>> entry : values.entrySet()) {
-				this.builder.part(entry.getKey(), entry.getValue());
+			for (Map.Entry<String, ? extends List<?>> entry : values.entrySet()) {
+				for (Object value : entry.getValue()) {
+					this.builder.part(entry.getKey(), value);
+				}
 			}
 			return this;
 		}
